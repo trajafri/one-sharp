@@ -25,3 +25,5 @@ data OSState = OSState { pos :: Int,
 
 -- | A One Sharp computation
 type Instruction = State OSState ()
+
+type Program = Instruction
