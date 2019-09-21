@@ -2,10 +2,17 @@
 module OSType where
 
 import           Control.Monad.State
+import qualified Data.Map                      as M
 import qualified Data.Text                     as T
 
+{-| A Parsed instruction
+    First count represents the number of 1's
+    Second count represents the number of #'s
+|-}
+data ParsedInstr = PI Int Int
+
 -- | List of text stored in registers
-type Registers = [T.Text]
+type Registers = M.Map Int T.Text
 
 -- | List of instructions in the current program
 type Instructions = [Instruction]
