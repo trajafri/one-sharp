@@ -24,10 +24,10 @@ parseInstr t = PI (countOnes t) (countSharps t)
 -- | Given a 1# program, converts it to a list of parsed instructions
 -- | Currently, it doesn't parse comments.
 collectInstrs :: Parsec Void T.Text [ParsedInstr]
-collectInstrs = (:) . parseInstr <$> takeInstr <*> collectInstrs
+collectInstrs = many takeInstr
  where
-  takeInstr :: Parsec Void T.Text T.Text
-  takeInstr = do
+  takeInstr :: Parsec Void T.Text ParsedInstr
+  takeInstr = try $ do
     ones   <- some $ space >> char '1'
     hashes <- some $ space >> char '#'
-    return $ T.pack ones <> T.pack hashes
+    return $ parseInstr $ T.pack ones <> T.pack hashes

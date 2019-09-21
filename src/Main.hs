@@ -1,11 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+{-# LANGUAGE MultiWayIf #-}
+
 module Main where
 
 import           Control.Monad.State
 import qualified Data.Text                     as T
 import qualified Data.Map                      as M
 import           OSType
+import           Parse
+import           Text.Megaparsec
 
 {---------------------------------------------------------------------------
  1# Instructions
@@ -15,13 +19,13 @@ import           OSType
 writeOne :: Int -> Instruction
 writeOne n = do
   modify' $ \(OSState p is rs) ->
-    OSState p is $ M.insertWithKey (const (<>)) n "1" rs
+    OSState (p + 1) is $ M.insertWithKey (const (<>)) n "1" rs
 
 -- | Creates a 1# instruction to `#` to register n
 writeHash :: Int -> Instruction
 writeHash n = do
   modify' $ \(OSState p is rs) ->
-    OSState p is $ M.insertWithKey (const (<>)) n "#" rs
+    OSState (p + 1) is $ M.insertWithKey (const (<>)) n "#" rs
 
 -- | Creates a 1# instruction to jump `n` steps forward
 jumpForward :: Int -> Instruction
@@ -44,7 +48,7 @@ cases n = do
     Just ('#', _) -> put (OSState (p + 3) is rs)
     _             -> noop
 
--- | Creates a 1# instructino that does nothing. This is only used to
+-- | Creates a 1# instruction that does nothing. This is only used to
 -- | avoid non-exhaustive patterns
 noop :: Instruction
 noop = return ()
@@ -82,16 +86,33 @@ piToInstr (PI os hs) =
       _ -> const noop
     $ os
 
-
+-- | Adds all instructions to memory and creates a 1# program
+-- | Assumes that all registers are empty
+pisToInstrs :: [ParsedInstr] -> Program
+pisToInstrs pis = put $ OSState start (piToInstr <$> pis) M.empty
+  where start = if null pis then 0 else 1
 
 {---------------------------------------------------------------------------
- 1# Instructions
+ 1# Interpreter
  ---------------------------------------------------------------------------}
 
+eval :: Program
+eval = do
+  (OSState p is _) <- get
+  if
+    | p == 0 || p == (length is + 1) -> return ()
+    | p < 0 || p > (length is + 1)   -> return ()
+    | --Should produce an error here
+      otherwise                      -> is !! (p - 1)
 
-
-
-
-
+-- | Temporary main to test programs in file named `test`
 main :: IO ()
-main = putStrLn "Hello, Haskell!"
+main = do
+  fileContent <- readFile "test"
+  let listOfPinstr = runParser collectInstrs "test" $ T.pack fileContent
+  case listOfPinstr of
+    Left  e   -> error $ "It failed brother\n" <> errorBundlePretty e
+    Right pis -> do
+      let (_, st) =
+            (`runState` (OSState 0 [] M.empty)) $ pisToInstrs pis >> eval
+      putStrLn . show . regs $ st
