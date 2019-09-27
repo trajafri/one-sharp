@@ -25,7 +25,7 @@ parseInstr t = PI (countOnes t) (countSharps t)
 -- | Currently, it doesn't parse comments.
 -- | TODO: Throw error if we get more than 5 hashes
 collectInstrs :: Parsec Void T.Text [ParsedInstr]
-collectInstrs = (try (space >> eol >> return [])) <|> (space >> many takeInstr)
+collectInstrs = (try (space >> eol >> return [])) <|> (space >> some takeInstr)
  where
   takeInstr :: Parsec Void T.Text ParsedInstr
   takeInstr = do
