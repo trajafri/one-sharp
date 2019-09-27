@@ -19,13 +19,13 @@ import           Text.Megaparsec
 writeOne :: Int -> Instruction
 writeOne n = do
   modify' $ \(OSState p is rs) ->
-    OSState (p + 1) is $ M.insertWithKey (const (<>)) n "1" rs
+    OSState (p + 1) is $ M.insertWithKey (const . flip $ (<>)) n "1" rs
 
 -- | Creates a 1# instruction to `#` to register n
 writeHash :: Int -> Instruction
 writeHash n = do
   modify' $ \(OSState p is rs) ->
-    OSState (p + 1) is $ M.insertWithKey (const (<>)) n "#" rs
+    OSState (p + 1) is $ M.insertWithKey (const . flip $ (<>)) n "#" rs
 
 -- | Creates a 1# instruction to jump `n` steps forward
 jumpForward :: Int -> Instruction
@@ -89,8 +89,7 @@ piToInstr (PI os hs) =
 -- | Adds all instructions to memory and creates a 1# program
 -- | Assumes that all registers are empty
 pisToInstrs :: [ParsedInstr] -> Program
-pisToInstrs pis = put $ OSState start (piToInstr <$> pis) M.empty
-  where start = if null pis then 0 else 1
+pisToInstrs pis = put $ OSState 1 (piToInstr <$> pis) M.empty
 
 {---------------------------------------------------------------------------
  1# Interpreter
@@ -100,16 +99,16 @@ eval :: Program
 eval = do
   (OSState p is _) <- get
   if
-    | p == 0 || p == (length is + 1) -> return ()
-    | p < 0 || p > (length is + 1)   -> return ()
+    | p == (length is + 1)         -> return ()
     | --Should produce an error here
-      otherwise                      -> is !! (p - 1)
+      p < 0 || p > (length is + 1) -> return ()
+    | otherwise                    -> is !! (p - 1) >> eval
 
 -- | Temporary main to test programs in file named `test`
 main :: IO ()
 main = do
-  fileContent <- readFile "test"
-  let listOfPinstr = runParser collectInstrs "test" $ T.pack fileContent
+  fileContent <- readFile "testos"
+  let listOfPinstr = runParser collectInstrs "testos" $ T.pack fileContent
   case listOfPinstr of
     Left  e   -> error $ "It failed brother\n" <> errorBundlePretty e
     Right pis -> do

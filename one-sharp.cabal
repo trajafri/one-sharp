@@ -46,7 +46,7 @@ test-suite onesharp-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Main.hs
-  other-modules:       Parse
+  other-modules:       ParseTest
   build-depends:       base >=4.12 && <4.13,
                        mtl >= 2.2.2,
                        one-sharp, 

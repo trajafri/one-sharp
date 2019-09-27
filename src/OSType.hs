@@ -9,7 +9,7 @@ import qualified Data.Text                     as T
     First count represents the number of 1's
     Second count represents the number of #'s
 |-}
-data ParsedInstr = PI Int Int
+data ParsedInstr = PI Int Int deriving (Eq, Show)
 
 -- | List of text stored in registers
 type Registers = M.Map Int T.Text
