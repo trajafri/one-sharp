@@ -43,10 +43,12 @@ cases n = do
   (OSState p is rs) <- get
   let registerText = maybe "" id $ M.lookup n rs
   case T.uncons registerText of
-    Nothing       -> put (OSState (p + 1) is rs)
-    Just ('1', _) -> put (OSState (p + 2) is rs)
-    Just ('#', _) -> put (OSState (p + 3) is rs)
-    _             -> noop
+    Nothing -> put (OSState (p + 1) is rs)
+    Just ('1', rest) ->
+      put (OSState (p + 2) is $ M.update (const . Just $ rest) n rs)
+    Just ('#', rest) ->
+      put (OSState (p + 3) is $ M.update (const . Just $ rest) n rs)
+    _ -> noop
 
 -- | Creates a 1# instruction that does nothing. This is only used to
 -- | avoid non-exhaustive patterns
