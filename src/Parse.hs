@@ -10,17 +10,6 @@ import           Data.Void
 import           Text.Megaparsec
 import           Text.Megaparsec.Char
 
--- | Given a text representation of a single 1# instruction,
--- | converts it to a ParsedInstr
-parseInstr :: T.Text -> ParsedInstr
-parseInstr t = PI (countOnes t) (countSharps t)
- where
-  countOnes :: T.Text -> Int
-  countOnes = T.count "1"
-
-  countSharps :: T.Text -> Int
-  countSharps = T.count "#"
-
 -- | Given a 1# program, converts it to a list of parsed instructions
 -- | Currently, it doesn't parse comments.
 -- | TODO: Throw error if we get more than 5 hashes
@@ -43,7 +32,7 @@ collectInstrs = (try (space >> eol >> return [])) <|> (space >> some takeInstr)
             space
             return c
           )
-    return . parseInstr $ T.pack ones <> T.pack hashes
+    return . PI (length ones) $ length hashes
 
 -- | Takes a 1# program in text and returns a 1# AST
 parseOneSharp
