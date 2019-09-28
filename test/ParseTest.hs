@@ -23,14 +23,16 @@ parseAssertions =
       , (" 1#"    , [PI 1 1])
       , ("1# "    , [PI 1 1])
       , ("1#1##1#", [PI 1 1, PI 1 2, PI 1 1])
-      , ("1#  \n 1#\n #  \n 1 #  111111##### #", [PI 1 1, PI 1 2, PI 1 1, PI 6 6])
+      , ( "1#  \n 1#\n #  \n 1 #  111111##### 1#"
+        , [PI 1 1, PI 1 2, PI 1 1, PI 6 5, PI 1 1]
+        )
       ]
     ]
     <> [ assertBool (t <> " parsed correctly but should throw an error")
          $ isLeft
          . parseOneSharp "test"
          $ (T.pack t)
-       | t <- ["1", "#", " 1 ", " # "]
+       | t <- ["1", "#", " 1 ", " # ", "1#1", "1#1#1", "1######"]
        ]
 
 
