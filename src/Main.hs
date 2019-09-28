@@ -15,13 +15,13 @@ import           Text.Megaparsec
  1# Instructions
  ---------------------------------------------------------------------------}
 
--- | Creates a 1# instruction to `1` to register n
+-- | Creates a 1# instruction to append `1` to register n
 writeOne :: Int -> Instruction
 writeOne n = do
   modify' $ \(OSState p is rs) ->
     OSState (p + 1) is $ M.insertWithKey (const . flip $ (<>)) n "1" rs
 
--- | Creates a 1# instruction to `#` to register n
+-- | Creates a 1# instruction to append `#` to register n
 writeHash :: Int -> Instruction
 writeHash n = do
   modify' $ \(OSState p is rs) ->
@@ -43,11 +43,11 @@ cases n = do
   (OSState p is rs) <- get
   let registerText = maybe "" id $ M.lookup n rs
   case T.uncons registerText of
-    Nothing -> put (OSState (p + 1) is rs)
+    Nothing -> put $ OSState (p + 1) is rs
     Just ('1', rest) ->
-      put (OSState (p + 2) is $ M.update (const . Just $ rest) n rs)
+      put $ OSState (p + 2) is $ M.update (const . Just $ rest) n rs
     Just ('#', rest) ->
-      put (OSState (p + 3) is $ M.update (const . Just $ rest) n rs)
+      put $ OSState (p + 3) is $ M.update (const . Just $ rest) n rs
     _ -> noop
 
 -- | Creates a 1# instruction that does nothing. This is only used to
