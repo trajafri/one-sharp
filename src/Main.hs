@@ -59,23 +59,6 @@ noop = return ()
  Parsed 1# Instruction helpers
  ---------------------------------------------------------------------------}
 
--- | If instruction is invalid, creates an error.
-verifyInstruction :: ParsedInstr -> Either T.Text ParsedInstr
-verifyInstruction p@(PI os hs)
-  |
- --This is only possible if the whole program starts with #
-    os < 0
-  = Left "Program doesn't begin with 1's"
-  | hs < 0
-  = Left $ "Instruction at position " <> "" <> " doesn't end with #'s"
-  | hs > 5
-  = Left
-    $  "Instruction at position "
-    <> ""
-    <> " doesn't contains more than five #'s"
-  | otherwise
-  = return p
-
 -- | Converts a parsed 1# instruction to a 1# computation.
 piToInstr :: ParsedInstr -> Instruction
 piToInstr (PI os hs) =
