@@ -53,7 +53,7 @@ cases n = do
 -- | Creates a 1# instruction that does nothing. This is only used to
 -- | avoid non-exhaustive patterns
 noop :: Instruction
-noop = return ()
+noop = undefined
 
 {---------------------------------------------------------------------------
  Parsed 1# Instruction helpers
