@@ -1,6 +1,7 @@
 -- | This module contains all the types used in the interpreter
 module OSType where
 
+import           Control.Monad.Except
 import           Control.Monad.State
 import qualified Data.Map                      as M
 import qualified Data.Text                     as T
@@ -15,7 +16,7 @@ data ParsedInstr = PI Int Int deriving (Eq, Show)
 type Registers = M.Map Int T.Text
 
 -- | List of instructions in the current program
-type Instructions = [Instruction]
+type Instructions = M.Map Int Instruction
 
 -- | Stateful data maintained during interpretation
 data OSState = OSState { pos :: Int,
@@ -26,4 +27,4 @@ data OSState = OSState { pos :: Int,
 -- | A One Sharp computation
 type Instruction = State OSState ()
 
-type Program = Instruction
+type Program = ExceptT T.Text (State OSState) ()

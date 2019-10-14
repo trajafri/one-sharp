@@ -24,20 +24,8 @@ collectInstrs = (try (space >> eol >> return [])) <|> (space >> some takeInstr)
  where
   takeInstr :: Parsec SyntaxError T.Text ParsedInstr
   takeInstr = do
-    ones <-
-      some
-        $ (do
-            c <- char '1'
-            space
-            return c
-          )
-    hashes <-
-      some
-        $ (do
-            c <- char '#'
-            space
-            return c
-          )
+    ones   <- parseChars '1'
+    hashes <- parseChars '#'
     let hLength = length hashes
     if hLength > 5
       then
@@ -46,6 +34,14 @@ collectInstrs = (try (space >> eol >> return [])) <|> (space >> some takeInstr)
         $  "expected at most 5 #'s, received "
         <> (T.pack . show $ hLength)
       else return . PI (length ones) $ length hashes
+  parseChars :: Char -> Parsec SyntaxError T.Text [Char]
+  parseChars ch =
+    some
+      $ (do
+          c <- char ch
+          space
+          return c
+        )
 
 -- | Takes a 1# program in text and returns a 1# AST
 parseOneSharp

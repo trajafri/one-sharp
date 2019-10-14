@@ -4,9 +4,11 @@
 
 module Main where
 
+import           Control.Monad.Except
 import           Control.Monad.State
 import qualified Data.Text                     as T
 import qualified Data.Map                      as M
+import           Data.Maybe
 import           OSType
 import           Parse
 import           Text.Megaparsec
@@ -48,7 +50,7 @@ cases n = do
       put $ OSState (p + 2) is $ M.update (const . Just $ rest) n rs
     Just ('#', rest) ->
       put $ OSState (p + 3) is $ M.update (const . Just $ rest) n rs
-    _ -> noop
+    _ -> noop -- If this happens, we have a character other than 1 or #
 
 -- | Creates a 1# instruction that does nothing. This is only used to
 -- | avoid non-exhaustive patterns
@@ -68,13 +70,17 @@ piToInstr (PI os hs) =
       3 -> jumpForward
       4 -> jumpBackwards
       5 -> cases
-      _ -> const noop
+      _ -> const noop -- This is impossible. If this happens, the parser is broken
     $ os
 
 -- | Adds all instructions to memory and creates a 1# program
 -- | Assumes that all registers are empty
 pisToInstrs :: [ParsedInstr] -> Program
-pisToInstrs pis = put $ OSState 1 (piToInstr <$> pis) M.empty
+pisToInstrs pis = put $ OSState 1 (toMap $ piToInstr <$> pis) M.empty
+ where
+  toMap :: [Instruction] -> M.Map Int Instruction
+  toMap is =
+    foldl (\m (ins, ind) -> M.insert ind ins m) M.empty $ zip is [0, 1 ..]
 
 {---------------------------------------------------------------------------
  1# Interpreter
@@ -84,10 +90,10 @@ eval :: Program
 eval = do
   (OSState p is _) <- get
   if
-    | p == (length is + 1)         -> return ()
+    | p == (length is + 1) -> return ()
     | --Should produce an error here
       p < 0 || p > (length is + 1) -> return ()
-    | otherwise                    -> is !! (p - 1) >> eval
+    | otherwise -> lift (fromJust . M.lookup (p - 1) $ is) >> eval
 
 -- | Temporary main to test programs in file named `test`
 main :: IO ()
@@ -98,5 +104,8 @@ main = do
     Left  e   -> error $ "It failed brother\n" <> errorBundlePretty e
     Right pis -> do
       let (_, st) =
-            (`runState` (OSState 0 [] M.empty)) $ pisToInstrs pis >> eval
+            (`runState` (OSState 0 M.empty M.empty))
+              .  runExceptT
+              $  pisToInstrs pis
+              >> eval
       putStrLn . show . regs $ st
