@@ -7,10 +7,14 @@ import qualified Data.Map                      as M
 import qualified Data.Text                     as T
 
 {-| A Parsed instruction
-    First count represents the number of 1's
-    Second count represents the number of #'s
+    Count represents the number of 1's
 |-}
-data ParsedInstr = PI Int Int deriving (Eq, Show)
+data ParsedInstr
+  = WriteOne Int
+  | WriteSharp Int
+  | JumpForward Int
+  | JumpBackwards Int
+  | Cases Int deriving (Eq, Show)
 
 -- | List of text stored in registers
 type Registers = M.Map Int T.Text

@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 
 -- | Utilities to parse one-sharp instructions
@@ -27,13 +26,19 @@ collectInstrs = (try (space >> eol >> return [])) <|> (space >> some takeInstr)
     ones   <- parseChars '1'
     hashes <- parseChars '#'
     let hLength = length hashes
-    if hLength > 5
-      then
+    let oLength = length ones
+    case hLength of
+      1 -> return . WriteOne $ oLength
+      2 -> return . WriteSharp $ oLength
+      3 -> return . JumpForward $ oLength
+      4 -> return . JumpBackwards $ oLength
+      5 -> return . Cases $ oLength
+      _ ->
         customFailure
-        .  SE
-        $  "expected at most 5 #'s, received "
-        <> (T.pack . show $ hLength)
-      else return . PI (length ones) $ length hashes
+          .  SE
+          $  "expected at most 5 #'s, received "
+          <> (T.pack . show $ hLength)
+
   parseChars :: Char -> Parsec SyntaxError T.Text [Char]
   parseChars ch =
     some

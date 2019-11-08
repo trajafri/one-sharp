@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 {-# LANGUAGE MultiWayIf #-}
 
 module Main where
@@ -63,15 +62,11 @@ noop = undefined
 
 -- | Converts a parsed 1# instruction to a 1# computation.
 piToInstr :: ParsedInstr -> Instruction
-piToInstr (PI os hs) =
-  case hs of
-      1 -> writeOne
-      2 -> writeHash
-      3 -> jumpForward
-      4 -> jumpBackwards
-      5 -> cases
-      _ -> const noop -- This is impossible. If this happens, the parser is broken
-    $ os
+piToInstr (WriteOne      os) = writeOne os
+piToInstr (WriteSharp    os) = writeHash os
+piToInstr (JumpForward   os) = jumpForward os
+piToInstr (JumpBackwards os) = jumpBackwards os
+piToInstr (Cases         os) = cases os
 
 -- | Adds all instructions to memory and creates a 1# program
 -- | Assumes that all registers are empty
